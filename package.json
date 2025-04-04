@@ -1,9 +1,9 @@
 {
   "name": "create-next-bricks",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "description": "create-next-bricks is a CLI tool designed to scaffold a modular and scalable structure for Next.js applications. Inspired by the concept of `bricks` as reusable building blocks, this tool helps developers quickly set up a well-structured Next.js project with predefined patterns that support maintainability and scalability.",
   "bin": {
-    "setup-eslint": "index.js"
+    "setup-next-bricks": "index.js"
   },
   "main": "index.js",
   "scripts": {
@@ -11,8 +11,25 @@
     "start": "node index.js"
   },
 "keywords": [
-    "eslint",
+    "next",
     "setup",
+    "fsd-setup",
+    "modular",
+    "bricks",
+    "cli",
+    "nextjs",
+    "nextjs-setup",
+    "nextjs-cli",
+    "nextjs-bricks",
+    "nextjs-setup-cli",
+    "nextjs-setup-bricks",
+    "nextjs-setup-tool",
+    "nextjs-setup-generator",
+    "nextjs-setup-scaffold",
+    "nextjs-setup-structure",
+    "nextjs-setup-modular",
+    "nextjs-setup-patterns",
+    "create-next-app",
     "configuration"
   ],
   "author": {
