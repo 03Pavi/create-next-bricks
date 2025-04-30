@@ -2,12 +2,22 @@
 const fs = require("fs");
 const path = require("path");
 const readline = require("readline");
+const userInput = process.argv[2];
 
-const projectName = process.argv[2] || "app-name";
-if (projectName === ".") {
-  projectName = path.basename(process.cwd());
+let projectPath;
+let projectName;
+const BASE_PATH=''
+
+if (!userInput) {
+  projectPath = path.join(process.cwd(), "next-bricks");
+  projectName = "next-bricks";
+} else if (userInput === ".") {
+  projectPath = process.cwd();
+  projectName = path.basename(projectPath);
+} else {
+  projectPath = path.join(process.cwd(), userInput);
+  projectName = userInput;
 }
-const projectPath = path.join(process.cwd(), projectName);
 
 console.log(`🚀 Creating project: ${projectName}...`);
 fs.mkdirSync(projectPath, { recursive: true });
@@ -67,6 +77,7 @@ const packageJsonContent = `{
     "react-redux": "^9.2.0",
     "redux-persist": "^6.0.0",
     "sass": "^1.85.1",
+    "i18next-browser-languagedetector": "^8.0.4"
   },
   "devDependencies": {
     "@types/node": "^20.17.23",
@@ -83,6 +94,128 @@ fs.writeFileSync(
   packageJsonContent,
   "utf8"
 );
+
+
+console.log("📜 Docker setup...");
+
+fs.writeFileSync(
+  path.join(projectPath, ".dockerignore"),
+  `
+**/node_modules
+**/npm-debug.log
+build
+/coverage/
+.idea/
+.git
+/.next/ 
+`
+);
+
+
+fs.writeFileSync(
+  path.join(projectPath, "Dockerfile"),
+  `
+FROM node:18-alpine AS base
+
+# Install dependencies only when needed
+FROM base AS deps
+
+WORKDIR /app
+
+# Install dependencies based on the preferred package manager
+COPY package.json package-lock.json* ./
+RUN npm ci
+
+# Rebuild the source code only when needed
+FROM base AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+ARG BASE_PATH='' 
+ENV BASE_PATH=${BASE_PATH}
+
+RUN npm run build
+
+# Production image, copy all the files and run next
+FROM base AS runner
+WORKDIR /app
+
+ENV NODE_ENV production
+RUN addgroup --system --gid 1001 nodejs
+RUN adduser --system --uid 1001 nextjs
+
+COPY --from=builder /app/public ./public
+
+# Set the correct permission for prerender cache
+RUN mkdir .next
+RUN chown nextjs:nodejs .next
+
+# Automatically leverage output traces to reduce image size
+# https://nextjs.org/docs/advanced-features/output-file-tracing
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+
+USER nextjs
+
+EXPOSE 3000
+
+ENV PORT 3000
+ENV HOSTNAME "0.0.0.0"
+
+# server.js is created by next build from the standalone output
+# https://nextjs.org/docs/pages/api-reference/next-config-js/output
+CMD ["node", "server.js"]
+
+`
+);
+
+fs.writeFileSync(
+  path.join(projectPath, "Dockerfile.dev"),
+  `
+FROM node:18-alpine
+WORKDIR /app
+COPY package*.json ./
+ENV PORT 3000
+EXPOSE $PORT
+`
+);
+
+
+fs.writeFileSync(
+  path.join(projectPath, "docker-compose.yml"),
+  `
+version: "3"
+
+services:
+  app:
+    container_name: web-app
+    build:
+      context: ./
+      dockerfile: Dockerfile.dev
+    restart: always
+    networks:
+      - web_app_network
+    ports:
+      - 3000:3000
+    env_file: 
+      - .env.local
+    tty: true
+    stdin_open: true
+    volumes:
+      - .:/app
+
+networks:
+  web_app_network:
+    name: web-shared-network
+    external: true
+
+  #docker network create web-shared-network
+  #replace web with app_name
+`
+);
+
+
+
 
 fs.writeFileSync(
   path.join(projectPath, "src/config/api.ts"),
@@ -237,9 +370,26 @@ fs.writeFileSync(
 fs.writeFileSync(
   path.join(projectPath, ".env.local"),
   `SESSION_SECRET=your-secure-random-key
+   AUTH_SECRET= secret
+   NEXT_PUBLIC_BASE_PATH = ''
+
   `
 );
 
+
+fs.writeFileSync(
+  path.join(projectPath, ".gitignore"),
+  `
+node_modules
+.env
+.next
+.vscode/
+.idea/
+coverage
+/etc/secrets
+
+  `
+);
 // redux setup
 
 (() => {

@@ -1,6 +1,6 @@
 {
   "name": "create-next-bricks",
-  "version": "1.0.3",
+  "version": "1.0.9",
   "description": "create-next-bricks is a CLI tool designed to scaffold a modular and scalable structure for Next.js applications. Inspired by the concept of `bricks` as reusable building blocks, this tool helps developers quickly set up a well-structured Next.js project with predefined patterns that support maintainability and scalability.",
   "bin": {
     "setup-next-bricks": "index.js"

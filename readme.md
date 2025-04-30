@@ -14,6 +14,7 @@ A powerful CLI tool to scaffold a scalable, modular **Next.js** project with bes
 - ⚙️ **TypeScript**, strict linting, and Prettier
 - 🔐 Auth module boilerplate
 - 🗃️ `.env.local` with default variables
+- 🐳 **Docker Setup**  for seamless containerization and development environment configuration 
 - 🧪 Testing ready structure
 - 🛠️ Easily extendable (e.g., Socket.IO, internationalization)
 
